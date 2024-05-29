@@ -7,24 +7,49 @@ import {
   opportunityUpdateSchema,
 } from "../schemas/opportunity.schemas";
 import { IsOpportunityIdValid } from "../middlewares/isOpportunityIdValid.middlewares";
+import { container } from "tsyringe";
+import { ValidateToken } from "../middlewares/validateToken.middlewares";
+import { OpportunityServices } from "../services/opportunity.services";
+import { IsOpportunityOwner } from "../middlewares/isOpportunityOwner.middlewares";
+
+container.registerSingleton("OpportunityServices", OpportunityServices);
+const opportunityControllers = container.resolve(OpportunityControllers);
 
 export const opportunityRouter = Router();
 
-const opportunityControllers = new OpportunityControllers();
-
 opportunityRouter.post(
   "/",
+  ValidateToken.execute,
   ValidateBody.execute(opportunityCreateSchema),
-  opportunityControllers.create
+  (req, res) => opportunityControllers.create(req, res)
 );
-opportunityRouter.get("/", opportunityControllers.findMany);
+
+opportunityRouter.get("/", (req, res) =>
+  opportunityControllers.findMany(req, res)
+);
+
+opportunityRouter.get("/user", ValidateToken.execute, (req, res) =>
+  opportunityControllers.findMany(req, res)
+);
 opportunityRouter.use("/:id", IsOpportunityIdValid.execute);
-opportunityRouter.get("/:id", opportunityControllers.findOne);
+opportunityRouter.get(
+  "/:id",
+  ValidateToken.execute,
+  IsOpportunityOwner.execute,
+  (req, res) => opportunityControllers.findOne(req, res)
+);
 opportunityRouter.patch(
   "/:id",
+  ValidateToken.execute,
+  IsOpportunityOwner.execute,
   ValidateBody.execute(opportunityUpdateSchema),
-  opportunityControllers.update
+  (req, res) => opportunityControllers.update(req, res)
 );
-opportunityRouter.delete("/:id", opportunityControllers.delete);
+opportunityRouter.delete(
+  "/:id",
+  ValidateToken.execute,
+  IsOpportunityOwner.execute,
+  (req, res) => opportunityControllers.delete(req, res)
+);
 
 opportunityRouter.use("/", applicationRouter);
