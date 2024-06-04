@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.applicationRouter = void 0;
+const express_1 = require("express");
+const application_controllers_1 = require("../controllers/application.controllers");
+const validateBody_middlewares_1 = require("../middlewares/validateBody.middlewares");
+const application_schemas_1 = require("../schemas/application.schemas");
+const validateToken_middlewares_1 = require("../middlewares/validateToken.middlewares");
+exports.applicationRouter = (0, express_1.Router)();
+const applicationControllers = new application_controllers_1.ApplicationControllers();
+exports.applicationRouter.post("/:id/applications", validateBody_middlewares_1.ValidateBody.execute(application_schemas_1.applicationCreateSchema), applicationControllers.create);
+exports.applicationRouter.get("/:id/applications", validateToken_middlewares_1.ValidateToken.execute, applicationControllers.findMany);
